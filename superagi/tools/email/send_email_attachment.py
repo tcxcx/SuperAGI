@@ -26,11 +26,21 @@ class SendEmailAttachmentTool(BaseTool):
     description: str = "Send an Email with a file attached to it"
 
     def _execute(self, to: str, subject: str, body: str, filename: str) -> str:
-        base_path = get_config('EMAIL_ATTACHMENT_BASE_PATH')
-        if not base_path:
-            base_path = ""
-        base_path = base_path + filename
-        attachmentpath = base_path
+        if input_root_dir is not None:
+            input_root_dir = input_root_dir if input_root_dir.startswith("/") else os.getcwd() + "/" + input_root_dir
+            input_root_dir = input_root_dir if input_root_dir.endswith("/") else input_root_dir + "/"
+            final_path = input_root_dir + filename
+
+        if final_path is None or not os.path.exists(final_path):
+            if output_root_dir is not None:
+                output_root_dir = output_root_dir if output_root_dir.startswith(
+                    "/") else os.getcwd() + "/" + output_root_dir
+                output_root_dir = output_root_dir if output_root_dir.endswith("/") else output_root_dir + "/"
+                final_path = output_root_dir + filename
+
+        if final_path is None or not os.path.exists(final_path):
+            raise FileNotFoundError(f"File '{filename}' not found.")
+        attachmentpath = final_path
         attachment = os.path.basename(attachmentpath)
         return self.send_email_with_attachment(to, subject, body, attachmentpath, attachment)
 
